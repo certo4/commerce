@@ -3,8 +3,9 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
-from .models import User
+from .models import User, Listing, ListingForm
 
 
 def index(request):
@@ -61,3 +62,43 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+
+@login_required
+def new_listing(request):
+    form = ListingForm()
+    return render(request, "auctions/new_listing.html", {
+        "form": form,
+        "message": ""
+    })
+
+@login_required
+def create_listing(request):
+    # Getting current user object
+    current_user = request.user
+
+    form = ListingForm(request.POST)
+    # Check whether form is valid:
+    if form.is_valid():
+
+        # Create new listing
+        l = Listing(
+            title = form.cleaned_data["title"],
+            # seller = current_user,
+            description = form.cleaned_data["description"],
+            starting_bid = form.cleaned_data["starting_bid"],
+            img_url = form.cleaned_data["img_url"],
+            # category_id = form.cleaned_data["category_id"],
+            current_price = 0,
+            is_active = True,
+            # current_winner = current_user
+        )
+        l.seller.set(request.user)
+        l.current_winner.set(request.user)
+        #l.category_id.set()
+        l.save()
+
+        return render(request, "auctions/test.html", {
+            "listing": l
+        })
+    else:
+        return HttpResponseRedirect(reverse("new_listing"))
