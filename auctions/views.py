@@ -87,15 +87,16 @@ def create_listing(request):
             description = form.cleaned_data["description"],
             starting_bid = form.cleaned_data["starting_bid"],
             img_url = form.cleaned_data["img_url"],
-            # category_id = form.cleaned_data["category_id"],
+            category_id = form.cleaned_data["category_id"],
             current_price = 0,
             is_active = True,
             # current_winner = current_user
         )
-        l.seller.set(request.user)
-        l.current_winner.set(request.user)
-        #l.category_id.set()
         l.save()
+        l.seller.add(request.user)
+        l.current_winner.add(request.user)
+        #l.category_id.set()
+        
 
         return render(request, "auctions/test.html", {
             "listing": l
