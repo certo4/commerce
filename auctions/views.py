@@ -6,10 +6,13 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
 from .models import User, Listing, ListingForm
+from .forms import CloseListing, WatchlistAction
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    return render(request, "auctions/index.html", {
+        "listings": Listing.objects.filter(is_active=True)
+    })
 
 
 def login_view(request):
@@ -73,8 +76,6 @@ def new_listing(request):
 
 @login_required
 def create_listing(request):
-    # Getting current user object
-    current_user = request.user
 
     form = ListingForm(request.POST)
     # Check whether form is valid:
@@ -87,6 +88,7 @@ def create_listing(request):
             description = form.cleaned_data["description"],
             starting_bid = form.cleaned_data["starting_bid"],
             img_url = form.cleaned_data["img_url"],
+            seller_username = request.user.username,
             category_id = form.cleaned_data["category_id"],
             current_price = 0,
             is_active = True,
@@ -103,3 +105,55 @@ def create_listing(request):
         })
     else:
         return HttpResponseRedirect(reverse("new_listing"))
+
+def listing(request, id):
+    if request.user.is_authenticated:
+        # Getting the object
+        listing = Listing.objects.get(id=id)
+
+        # Setting watchlist form button text
+        watchlist_text = "Add to Watchlist"
+        watchlist_form = WatchlistAction(initial={'add_watchlist': True})
+        if listing.is_active:
+            watchlist_text = "Remove from Watchlist"
+            watchlist_form = WatchlistAction(initial={'add_watchlist': False})
+
+        #Checking whether current user is the owner of listing
+        # is_owner = False
+        # if listing.seller_username == request.user.username:
+        #     is_owner = True
+        return render(request, "auctions/listing.html", {
+            "listing": listing,
+            "is_authenticated": request.user.is_authenticated,
+            "watchlist_form": watchlist_form,
+            "watchlist_text": watchlist_text
+        })
+    else:
+        return render(request, "auctions/listing.html", {
+            "listing": listing,
+            "is_authenticated": request.user.is_authenticated,
+            "watchlist_form": False,
+            "watchlist_text": ""
+        })
+
+
+def watchlist_action(request, id):
+    # If this is a POST request we need to process the form data
+    if request.method == 'POST':
+
+        # Create a form instance and populate it with data from the request:
+        form = WatchlistAction()
+        # Check whether it's valid:
+        if form.is_valid():
+            add_watchlist = form.cleaned_data["add_watchlist"]
+            listing = Listing.objects.get(id=id)
+            listing.in_watchlist = add_watchlist
+
+
+            return HttpResponseRedirect(f'/listings/{id}')
+
+    # If a GET (or any other method) we'll create a blank form
+    else:
+        form = WatchlistAction()
+
+    return HttpResponseRedirect(f'/listings/{id}')

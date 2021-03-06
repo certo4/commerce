@@ -1,0 +1,23 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+
+    {# TODO: Add message for error and successes #}
+
+    <h2>{{ listing.title }}</h2>
+    
+    {% if watchlist_form %}
+        <form action="{% url 'watchlist_action' listing.id %}" method="post">
+            {% csrf_token %}
+            {{ watchlist_form }}
+            <button type="submit" name="submit">{{ watchlist_text}}</button>
+        </form>
+    {% endif %}
+
+    <p>{{ listing.description }}</p>
+    <p>Price: ${{ listing.starting_bid }}</p>
+    <p>Image: {{ listing.img_url }}</p>
+    <p>Seller: {{ listing.seller_username }}</p>
+    <p>Category: {{ listing.category_id }}</p>
+    
+{% endblock %}

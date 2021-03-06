@@ -5,23 +5,28 @@ from django.forms import ModelForm
 
 
 class User(AbstractUser):
+    def __str__(self):
+        return self.username
     pass
 
 class Category(models.Model):
     pass
 
 class Listing(models.Model):
-    listing_id = models.IntegerField(blank=True, null=True)
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=64) 
     starting_bid = models.IntegerField()
     seller = models.ManyToManyField(User, blank=True, related_name="listing")
+    seller_username = models.CharField(max_length=64, default="")
     img_url = models.CharField(max_length=64, blank=True) 
     category_id = models.IntegerField(default=1)
-    # category_id = models.ManyToManyField(Category, blank=True, related_name="listing")
+    in_watchlist = models.BooleanField(default=False)
     current_price = models.IntegerField(blank=True) 
     is_active = models.BooleanField()
     current_winner = models.ManyToManyField(User, blank=True, related_name="won_bid")
+
+    def __str__(self):
+        return self.title
 
 class ListingForm(ModelForm):
     class Meta:
