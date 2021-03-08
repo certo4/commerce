@@ -91,7 +91,7 @@ def create_listing(request):
             starting_bid = form.cleaned_data["starting_bid"],
             img_url = form.cleaned_data["img_url"],
             seller_username = request.user.username,
-            category_id = form.cleaned_data["category_id"],
+            category = form.cleaned_data["category"],
             current_price = 0,
             is_active = True,
             # current_winner = current_user
@@ -120,15 +120,23 @@ def listing(request, id):
             watchlist_text = "Remove from Watchlist"
             watchlist_form = WatchlistAction(initial={'set_watchlist':False})
 
-        #Checking whether current user is the owner of listing
-        # is_owner = False
-        # if listing.seller_username == request.user.username:
-        #     is_owner = True
+        # Check if the current user is the winner
+        current_winner = False
+        if not listing.is_active and listing.current_winner_username == request.user.username:
+            current_winner = listing.current_winner_username
+
+        # Closing listing logic
+        close_listing_form = False
+        if listing.seller_username == request.user.username:
+            close_listing_form = CloseListing()
+
         return render(request, "auctions/listing.html", {
             "listing": listing,
             "is_authenticated": request.user.is_authenticated,
             "watchlist_form": watchlist_form,
-            "watchlist_text": watchlist_text
+            "watchlist_text": watchlist_text,
+            "close_listing_form": close_listing_form,
+            "current_winner": current_winner
         })
     else:
         return render(request, "auctions/listing.html", {
@@ -149,6 +157,7 @@ def watchlist(request):
         "is_watchlist": True
     })
 
+@login_required
 def watchlist_action(request, id):
     # If this is a POST request we need to process the form data
     if request.method == 'POST':
@@ -159,19 +168,12 @@ def watchlist_action(request, id):
         if form.is_valid():
             # Get listing object and new in_watchlist value
             listing = Listing.objects.get(id=id)
-            set_watchlist = bool(form.cleaned_data["set_watchlist"])
-
-            # Set the new value for in_watchlist
-            if set_watchlist:
-                listing.in_watchlist = True
-                listing.save()
-            else:
-                listing.in_watchlist = False
-                listing.save()
+            listing.in_watchlist = bool(form.cleaned_data["set_watchlist"])
+            listing.save()
 
             return render(request, "auctions/test.html", {
                 "listing": listing,
-                "add_watchlist": set_watchlist,
+                "add_watchlist": listing.in_watchlist,
                 # "form_info": form_info,
                 # "form_info_type": form_info_type,
                 # "add_watchlist_type": request.POST
@@ -182,3 +184,25 @@ def watchlist_action(request, id):
         form = WatchlistAction()
     
     return HttpResponseRedirect(f'/listings/{id}')
+
+@login_required
+def close_listing(request, id):
+    listing = Listing.objects.get(id=id)
+    if request.user.username == listing.seller_username:
+        listing.is_active = False
+        listing.save()
+    return HttpResponseRedirect(f'/listings/{id}')
+
+def categories(request):
+    #TODO: Create a test object? What happens if null? Rethink this
+    # listing = Listing.objects.first()
+    # categories = listing.all_categories()
+    # return render(request, "auctions/index.html", {
+    #     "listings": Listing.objects.filter(
+    #         in_watchlist=True, 
+    #         seller_username=request.user.username
+    #     ),
+    #     "is_index": False,
+    #     "is_watchlist": True
+    # })
+    

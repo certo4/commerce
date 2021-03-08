@@ -5,6 +5,10 @@
     {# TODO: Add message for error and successes #}
 
     <h2>{{ listing.title }}</h2>
+
+    {% if current_winner %}
+        <h3>Congratulations {{ current_winner }}! You won the auction</h3>
+    {% endif %}
     
     {% if watchlist_form %}
         <form action="{% url 'watchlist_action' listing.id %}" method="post">
@@ -13,6 +17,14 @@
             <button type="submit" name="submit">{{ watchlist_text}}</button>
         </form>
     {% endif %}
+
+    {% if close_listing_form %}
+    <form action="{% url 'close_listing' listing.id %}" method="post">
+        {% csrf_token %}
+        {{ close_listing_form }}
+        <button type="submit" name="submit">Close Listing</button>
+    </form>
+{% endif %}
 
     <p>{{ listing.description }}</p>
     <p>Price: ${{ listing.starting_bid }}</p>

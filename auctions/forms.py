@@ -1,8 +1,9 @@
 from django import forms
 
 class CloseListing(forms.Form):
-    form_type = forms.BooleanField(
+    close_listing = forms.BooleanField(
         initial=True,
+        required=False,
         widget=forms.HiddenInput()
     )
 
