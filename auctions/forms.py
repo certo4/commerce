@@ -8,6 +8,7 @@ class CloseListing(forms.Form):
 
 class WatchlistAction(forms.Form):
     add_watchlist = forms.BooleanField(
+        required=False,
         widget=forms.HiddenInput()
     )
 
