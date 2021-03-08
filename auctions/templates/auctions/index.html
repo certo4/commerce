@@ -1,7 +1,11 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
+    {% if is_index %}
     <h2>Active Listings</h2>
+    {% elif is_watchlist %}
+    <h2>Watchlist</h2>
+    {% endif %}
 
     {% for listing in listings %}
         <div>

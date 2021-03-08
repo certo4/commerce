@@ -11,7 +11,9 @@ from .forms import CloseListing, WatchlistAction
 
 def index(request):
     return render(request, "auctions/index.html", {
-        "listings": Listing.objects.filter(is_active=True)
+        "listings": Listing.objects.filter(is_active=True),
+        "is_index": True,
+        "is_watchlist": False
     })
 
 
@@ -113,10 +115,10 @@ def listing(request, id):
 
         # Setting watchlist form button text
         watchlist_text = "Add to Watchlist"
-        watchlist_form = WatchlistAction(initial={'add_watchlist':True})
+        watchlist_form = WatchlistAction(initial={'set_watchlist':True})
         if listing.in_watchlist:
             watchlist_text = "Remove from Watchlist"
-            watchlist_form = WatchlistAction(initial={'add_watchlist':False})
+            watchlist_form = WatchlistAction(initial={'set_watchlist':False})
 
         #Checking whether current user is the owner of listing
         # is_owner = False
@@ -136,6 +138,16 @@ def listing(request, id):
             "watchlist_text": ""
         })
 
+@login_required
+def watchlist(request):
+    return render(request, "auctions/index.html", {
+        "listings": Listing.objects.filter(
+            in_watchlist=True, 
+            seller_username=request.user.username
+        ),
+        "is_index": False,
+        "is_watchlist": True
+    })
 
 def watchlist_action(request, id):
     # If this is a POST request we need to process the form data
@@ -145,50 +157,28 @@ def watchlist_action(request, id):
         form = WatchlistAction(request.POST)
         # Check whether it's valid:
         if form.is_valid():
-            # add_watchlist = bool(form.cleaned_data["add_watchlist"])
+            # Get listing object and new in_watchlist value
             listing = Listing.objects.get(id=id)
-            form_info = form.cleaned_data["add_watchlist"]
-            form_info_type = isinstance(form_info, bool)
+            set_watchlist = bool(form.cleaned_data["set_watchlist"])
 
-            add_watchlist = bool(form.cleaned_data["add_watchlist"])
-            # print(type(add_watchlist))
-            add_watchlist_type = isinstance(add_watchlist, bool)
-
-            # listing.update(in_watchlist=add_watchlist)
-            # listing.save()
-
-            if add_watchlist:
+            # Set the new value for in_watchlist
+            if set_watchlist:
                 listing.in_watchlist = True
                 listing.save()
             else:
                 listing.in_watchlist = False
                 listing.save()
-            # listing.update(in_watchlist=add_watchlist)
-            # print(type(listing.in_watchlist))
+
             return render(request, "auctions/test.html", {
                 "listing": listing,
-                "add_watchlist": add_watchlist,
-                "form_info": form_info,
-                "form_info_type": form_info_type,
-                "add_watchlist_type": request.POST
-            })
-        else:
-            return render(request, "auctions/test.html", {
-                # "listing": listing,
-                "add_watchlist": form.errors,
-                "form_info": request.POST,
+                "add_watchlist": set_watchlist,
+                # "form_info": form_info,
                 # "form_info_type": form_info_type,
-                # "add_watchlist_type": add_watchlist_type
+                # "add_watchlist_type": request.POST
             })
+
+    # If a GET (or any other method) we'll create a blank form
     else:
         form = WatchlistAction()
     
-        return HttpResponseRedirect(f'/listings/{id}')
-
-    #         return HttpResponseRedirect(f'/listings/{id}')
-
-    # # If a GET (or any other method) we'll create a blank form
-    # else:
-    #     form = WatchlistAction()
-
-    # return HttpResponseRedirect(f'/listings/{id}')
+    return HttpResponseRedirect(f'/listings/{id}')
