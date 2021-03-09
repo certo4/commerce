@@ -32,6 +32,12 @@
     <p>Seller: {{ listing.seller_username }}</p>
     <p>Category: {{ listing.category_id }}</p>
     <p>Watchlist: {{ listing.in_watchlist }}</p>
+    <br>
+    <br>
+
+    {{ message }}
+    
+    <br>
 
     {% if is_authenticated and watchlist_form %}
     <form action="{% url 'bid' listing.id %}" method="post">

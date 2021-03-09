@@ -4,8 +4,9 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from decimal import Decimal
 
-from .models import User, Listing, ListingForm, CATEGORIES, BiddingForm
+from .models import User, Listing, ListingForm, CATEGORIES, BiddingForm, Bid
 from .forms import CloseListing, WatchlistAction
 
 
@@ -92,7 +93,7 @@ def create_listing(request):
             img_url = form.cleaned_data["img_url"],
             seller_username = request.user.username,
             category = form.cleaned_data["category"],
-            current_price = 0,
+            current_price = form.cleaned_data["starting_bid"],
             is_active = True,
             # current_winner = current_user
         )
@@ -217,23 +218,30 @@ def bid(request, id):
         if form.is_valid():
             # Get listing object and new in_watchlist value
             listing = Listing.objects.get(id=id)
-            listing.in_watchlist = bool(form.cleaned_data["set_watchlist"])
-            listing.save()
+            submitted_bid = Decimal(form.cleaned_data["bid"])
 
+            #TODO: Bid can be equal to starting bid
+
+            # Checking that the bid is higher than current price
+            if submitted_bid > listing.current_price:
+                # Create bid
+                b = Bid(
+                    bid = submitted_bid,
+                    bidder_username = request.user.username
+                )
+                b.save()
+
+                # Save new price in listing object
+                listing.current_price = submitted_bid
+                listing.current_winner_username = request.user.username
+                listing.save()
+
+                message = "Your bid was accepted. You are on the lead!"
+            else:
+                message = "Your bid is lower than or equal to the current bid. Big higher!"
+            # TODO: Make a function that will re-render the listing page with all its forms
             return render(request, "auctions/test.html", {
-                "listing": listing,
-                "add_watchlist": listing.in_watchlist,
+                "message": message,
             })
-
-    # If a GET (or any other method) we'll create a blank form
-    else:
-        form = WatchlistAction()
-    
+   
     return HttpResponseRedirect(f'/listings/{id}')
-
-    # Checking that the first bid is higher than starting bid
-    # if listing.current_price == 0:
-    #     if 
-
-
-    pass

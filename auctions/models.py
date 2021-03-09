@@ -41,13 +41,13 @@ class ListingForm(ModelForm):
         fields = ['title', 'description', 'starting_bid', 'img_url', 'category']
 
 class Bid(models.Model):
-    price = models.DecimalField(max_digits=9, decimal_places=2, default=0)
+    bid = models.DecimalField(max_digits=9, decimal_places=2, default=0)
     bidder_username = models.CharField(max_length=64, blank=True, default="")
-    bidder_user = models.ManyToManyField(User, blank=True, related_name="bidder")
+    # bidder_user = models.ManyToManyField(User, blank=True, related_name="bidder")
 
 class BiddingForm(ModelForm):
     class Meta:
         model = Bid
-        fields = ['price', 'bidder_username']
-        widgets = {'bidder_username': forms.HiddenInput()}
+        fields = ['bid']
+        # widgets = {'bidder_username': forms.HiddenInput()}
 
