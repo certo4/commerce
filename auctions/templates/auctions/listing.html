@@ -18,13 +18,13 @@
         </form>
     {% endif %}
 
-    {% if close_listing_form %}
-    <form action="{% url 'close_listing' listing.id %}" method="post">
-        {% csrf_token %}
-        {{ close_listing_form }}
-        <button type="submit" name="submit">Close Listing</button>
-    </form>
-{% endif %}
+    {% if close_listing_form and listing.is_active == True %}
+        <form action="{% url 'close_listing' listing.id %}" method="post">
+            {% csrf_token %}
+            {{ close_listing_form }}
+            <button type="submit" name="submit">Close Listing</button>
+        </form>
+    {% endif %}
 
     <p>{{ listing.description }}</p>
     <p>Price: ${{ listing.starting_bid }}</p>
@@ -32,5 +32,14 @@
     <p>Seller: {{ listing.seller_username }}</p>
     <p>Category: {{ listing.category_id }}</p>
     <p>Watchlist: {{ listing.in_watchlist }}</p>
+
+    {% if is_authenticated and watchlist_form %}
+    <form action="{% url 'bid' listing.id %}" method="post">
+        {% csrf_token %}
+        {{ bidding_form }}
+        <button type="submit" name="submit">Bid</button>
+    </form>    
+    {% endif %}
+
     
 {% endblock %}

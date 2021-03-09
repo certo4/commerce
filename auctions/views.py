@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
-from .models import User, Listing, ListingForm, CATEGORIES
+from .models import User, Listing, ListingForm, CATEGORIES, BiddingForm
 from .forms import CloseListing, WatchlistAction
 
 
@@ -136,7 +136,8 @@ def listing(request, id):
             "watchlist_form": watchlist_form,
             "watchlist_text": watchlist_text,
             "close_listing_form": close_listing_form,
-            "current_winner": current_winner
+            "current_winner": current_winner,
+            "bidding_form": BiddingForm()
         })
     else:
         return render(request, "auctions/listing.html", {
@@ -174,9 +175,6 @@ def watchlist_action(request, id):
             return render(request, "auctions/test.html", {
                 "listing": listing,
                 "add_watchlist": listing.in_watchlist,
-                # "form_info": form_info,
-                # "form_info_type": form_info_type,
-                # "add_watchlist_type": request.POST
             })
 
     # If a GET (or any other method) we'll create a blank form
@@ -207,3 +205,35 @@ def category(request, id):
         "is_watchlist": False,
         "is_category": id
     })
+
+def bid(request, id):
+    listing = Listing.objects.get(id=id)
+    # If this is a POST request we need to process the form data
+    if request.method == 'POST':
+
+        # Create a form instance and populate it with data from the request:
+        form = BiddingForm(request.POST)
+        # Check whether it's valid:
+        if form.is_valid():
+            # Get listing object and new in_watchlist value
+            listing = Listing.objects.get(id=id)
+            listing.in_watchlist = bool(form.cleaned_data["set_watchlist"])
+            listing.save()
+
+            return render(request, "auctions/test.html", {
+                "listing": listing,
+                "add_watchlist": listing.in_watchlist,
+            })
+
+    # If a GET (or any other method) we'll create a blank form
+    else:
+        form = WatchlistAction()
+    
+    return HttpResponseRedirect(f'/listings/{id}')
+
+    # Checking that the first bid is higher than starting bid
+    # if listing.current_price == 0:
+    #     if 
+
+
+    pass
