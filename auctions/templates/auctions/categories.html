@@ -4,15 +4,7 @@
 
     <h2>Categories</h2>
 
-    {% for listing in listings %}
-        <div>
-            <h2><a href="{% url 'listings' listing.id %}">{{ listing.title }}</a></h2>
-            <p>{{ listing.description }}</p>
-            <p>Price: ${{ listing.starting_bid }}</p>
-            <p>Image: {{ listing.img_url }}</p>
-            <p>Seller: {{ listing.seller_username }}</p>
-            <p>Category: {{ listing.category_id }}</p>
-        </div>
-        <br>
+    {% for category_label in category_labels %}
+        <li><a href="#">{{ category_label }}</a></li>
     {% endfor %}
 {% endblock %}

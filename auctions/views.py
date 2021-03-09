@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
-from .models import User, Listing, ListingForm
+from .models import User, Listing, ListingForm, CATEGORIES
 from .forms import CloseListing, WatchlistAction
 
 
@@ -194,15 +194,16 @@ def close_listing(request, id):
     return HttpResponseRedirect(f'/listings/{id}')
 
 def categories(request):
-    #TODO: Create a test object? What happens if null? Rethink this
-    # listing = Listing.objects.first()
-    # categories = listing.all_categories()
-    # return render(request, "auctions/index.html", {
-    #     "listings": Listing.objects.filter(
-    #         in_watchlist=True, 
-    #         seller_username=request.user.username
-    #     ),
-    #     "is_index": False,
-    #     "is_watchlist": True
-    # })
-    
+    category_labels = []
+    category_ids = []
+    for key, category in CATEGORIES:
+        category_ids.append(key)
+        category_labels.append(category)
+        
+    return render(request, "auctions/categories.html", {
+        "category_labels": category_labels,
+        "category_ids": category_ids
+    })
+
+def category(request, id):
+    pass

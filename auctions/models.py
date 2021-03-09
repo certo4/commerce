@@ -3,6 +3,12 @@ from django.db import models
 
 from django.forms import ModelForm
 
+CATEGORIES = [
+    ('furniture', 'Furniture'),
+    ('electronics', 'Electronics'),
+    ('art', 'Art'),
+    ('other', 'Other')
+]
 
 class User(AbstractUser):
     def __str__(self):
@@ -13,12 +19,6 @@ class Category(models.Model):
     pass
 
 class Listing(models.Model):
-    CATEGORIES = [
-        ('furniture', 'Furniture'),
-        ('electronics', 'Electronics'),
-        ('art', 'Art'),
-        ('other', 'Other')
-    ]
 
     title = models.CharField(max_length=64)
     description = models.CharField(max_length=64)
@@ -35,10 +35,6 @@ class Listing(models.Model):
 
     def __str__(self):
         return self.title
-
-    def all_categories(self):
-        return self.CATEGORIES
-
 
     # TODO: Make a helper function that will check if current user is owner
 
