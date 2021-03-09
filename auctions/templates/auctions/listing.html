@@ -33,13 +33,12 @@
     <p>Category: {{ listing.category_id }}</p>
     <p>Watchlist: {{ listing.in_watchlist }}</p>
     <br>
-    <br>
 
     {{ message }}
     
     <br>
 
-    {% if is_authenticated and watchlist_form %}
+    {% if is_authenticated and request.user.username != listing.seller_username%}
     <form action="{% url 'bid' listing.id %}" method="post">
         {% csrf_token %}
         {{ bidding_form }}

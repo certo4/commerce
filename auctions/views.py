@@ -6,8 +6,8 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
 
-from .models import User, Listing, ListingForm, CATEGORIES, BiddingForm, Bid
-from .forms import CloseListing, WatchlistAction
+from .models import User, Listing, CATEGORIES, Bid
+from .forms import CloseListing, WatchlistAction, ListingForm, BiddingForm
 
 
 def index(request):
@@ -93,7 +93,7 @@ def create_listing(request):
             img_url = form.cleaned_data["img_url"],
             seller_username = request.user.username,
             category = form.cleaned_data["category"],
-            current_price = form.cleaned_data["starting_bid"],
+            current_price = 0,
             is_active = True,
             # current_winner = current_user
         )
@@ -207,6 +207,7 @@ def category(request, id):
         "is_category": id
     })
 
+@login_required
 def bid(request, id):
     listing = Listing.objects.get(id=id)
     # If this is a POST request we need to process the form data
@@ -219,11 +220,10 @@ def bid(request, id):
             # Get listing object and new in_watchlist value
             listing = Listing.objects.get(id=id)
             submitted_bid = Decimal(form.cleaned_data["bid"])
-
-            #TODO: Bid can be equal to starting bid
+            acceptable_bid = is_acceptable_bid(submitted_bid, listing)   
 
             # Checking that the bid is higher than current price
-            if submitted_bid > listing.current_price:
+            if acceptable_bid:
                 # Create bid
                 b = Bid(
                     bid = submitted_bid,
@@ -245,3 +245,17 @@ def bid(request, id):
             })
    
     return HttpResponseRedirect(f'/listings/{id}')
+    
+def is_acceptable_bid(submitted_bid, listing):
+    # Checking that submitted bid is equal to or greater than starting bid
+    # TODO: Replace 0 with a better way to check
+    if listing.current_price == 0:
+        if submitted_bid >= listing.starting_bid:
+            return True
+    # Checking that submitted bid is greater than current price
+    elif submitted_bid > listing.current_price:
+        return True
+    # Else the bid is not acceptable
+    return False
+
+
