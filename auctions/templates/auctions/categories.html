@@ -4,7 +4,7 @@
 
     <h2>Categories</h2>
 
-    {% for category_label in category_labels %}
-        <li><a href="#">{{ category_label }}</a></li>
+    {% for key, category_label in categories %}
+        <li><a href="{% url 'category' key %}">{{ category_label }}</a></li>
     {% endfor %}
 {% endblock %}

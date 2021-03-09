@@ -12,8 +12,8 @@ from .forms import CloseListing, WatchlistAction
 def index(request):
     return render(request, "auctions/index.html", {
         "listings": Listing.objects.filter(is_active=True),
-        "is_index": True,
-        "is_watchlist": False
+        "is_watchlist": False,
+        "is_category": False
     })
 
 
@@ -153,8 +153,8 @@ def watchlist(request):
             in_watchlist=True, 
             seller_username=request.user.username
         ),
-        "is_index": False,
-        "is_watchlist": True
+        "is_watchlist": True,
+        "is_category": False
     })
 
 @login_required
@@ -193,17 +193,17 @@ def close_listing(request, id):
         listing.save()
     return HttpResponseRedirect(f'/listings/{id}')
 
-def categories(request):
-    category_labels = []
-    category_ids = []
-    for key, category in CATEGORIES:
-        category_ids.append(key)
-        category_labels.append(category)
-        
+def categories(request):   
     return render(request, "auctions/categories.html", {
-        "category_labels": category_labels,
-        "category_ids": category_ids
+        "categories": CATEGORIES
     })
 
 def category(request, id):
-    pass
+    return render(request, "auctions/index.html", {
+        "listings": Listing.objects.filter(
+            is_active=True,
+            category=id
+        ),
+        "is_watchlist": False,
+        "is_category": id
+    })
