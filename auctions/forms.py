@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import ModelForm
-from .models import Listing, Bid
+from .models import Listing, Bid, Comment
 
 class CloseListing(forms.Form):
     close_listing = forms.BooleanField(
@@ -26,3 +26,7 @@ class BiddingForm(ModelForm):
         fields = ['bid']
         # widgets = {'bidder_username': forms.HiddenInput()}
 
+class CommentForm(ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['comment_text']

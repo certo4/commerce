@@ -39,12 +39,31 @@
     <br>
 
     {% if is_authenticated and request.user.username != listing.seller_username%}
-    <form action="{% url 'bid' listing.id %}" method="post">
-        {% csrf_token %}
-        {{ bidding_form }}
-        <button type="submit" name="submit">Bid</button>
-    </form>    
+        <form action="{% url 'bid' listing.id %}" method="post">
+            {% csrf_token %}
+            {{ bidding_form }}
+            <button type="submit" name="submit">Bid</button>
+        </form>    
     {% endif %}
 
+    <br>
+
+    {% if comment_form %}
+        <form action="{% url 'comment' listing.id %}" method="post">
+            {% csrf_token %}
+            {{ comment_form }}
+            <button type="submit" name="submit">Comment</button>
+        </form>
+    {% endif %}
+
+    {% if comments %}
+        {% for comment in comments %}
+            <br>
+            <div>
+                <p>{{ comment.comment_text }}</p>
+                <p>By {{ comment.commenter_username }}</p>
+            </div>
+        {% endfor %}    
+    {% endif %}
     
 {% endblock %}

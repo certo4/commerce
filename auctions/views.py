@@ -6,8 +6,8 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from decimal import Decimal
 
-from .models import User, Listing, CATEGORIES, Bid
-from .forms import CloseListing, WatchlistAction, ListingForm, BiddingForm
+from .models import User, Listing, CATEGORIES, Bid, Comment
+from .forms import CloseListing, WatchlistAction, ListingForm, BiddingForm, CommentForm
 
 
 def index(request):
@@ -138,14 +138,17 @@ def listing(request, id):
             "watchlist_text": watchlist_text,
             "close_listing_form": close_listing_form,
             "current_winner": current_winner,
-            "bidding_form": BiddingForm()
+            "bidding_form": BiddingForm(),
+            "comment_form": CommentForm(),
+            "comments": Comment.objects.filter(listing_id=id)
         })
     else:
         return render(request, "auctions/listing.html", {
             "listing": listing,
             "is_authenticated": request.user.is_authenticated,
             "watchlist_form": False,
-            "watchlist_text": ""
+            "watchlist_text": "",
+            "comments": Comment.objects.filter(listing_id=id)
         })
 
 @login_required
@@ -258,4 +261,31 @@ def is_acceptable_bid(submitted_bid, listing):
     # Else the bid is not acceptable
     return False
 
+def comment(request, id):
+    # If this is a POST request we need to process the form data
+    if request.method == 'POST':
 
+        # Create a form instance and populate it with data from the request:
+        form = CommentForm(request.POST)
+        # Check whether it's valid:
+        if form.is_valid():
+
+            # Create comment
+            c = Comment(
+                comment_text = form.cleaned_data["comment_text"],
+                # listing_id = Listing.objects.get(pk=int(id)),
+                commenter_username = request.user.username
+            )
+            c.save()
+            c.listing_id.add(Listing.objects.get(pk=int(id)))
+            c.save()
+
+            return render(request, "auctions/test.html", {
+                "comment": "Success"
+            })
+
+    # If a GET (or any other method) we'll create a blank form
+    else:
+        form = CommentForm()
+    
+    return HttpResponseRedirect(f'/listings/{id}')

@@ -19,7 +19,7 @@ class Listing(models.Model):
     starting_bid = models.DecimalField(max_digits=9, decimal_places=2, default=0)
     seller = models.ManyToManyField(User, blank=True, related_name="listing")
     seller_username = models.CharField(max_length=64, default="")
-    img_url = models.CharField(max_length=64, blank=True) 
+    img_url = models.CharField(max_length=64, blank=True)
     category = models.CharField(max_length=64, choices=CATEGORIES, default="art")
     in_watchlist = models.BooleanField(default=False)
     #TODO: Check for only positives and change default from 0!
@@ -38,5 +38,10 @@ class Bid(models.Model):
     bidder_username = models.CharField(max_length=64, blank=True, default="")
     # bidder_user = models.ManyToManyField(User, blank=True, related_name="bidder")
 
+class Comment(models.Model):
+    #TODO: Replace listing id with a many to many field?
+    comment_text = models.CharField(max_length=100, blank=True)
+    listing_id = models.ManyToManyField(Listing, blank=True, related_name="commented_on")
+    commenter_username = models.CharField(max_length=64, blank=True, default="")
 
 
