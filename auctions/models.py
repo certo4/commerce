@@ -5,7 +5,8 @@ CATEGORIES = [
     ('furniture', 'Furniture'),
     ('electronics', 'Electronics'),
     ('art', 'Art'),
-    ('other', 'Other')
+    ('other', 'Other'),
+    ('','')
 ]
 
 class User(AbstractUser):
@@ -20,7 +21,7 @@ class Listing(models.Model):
     seller = models.ManyToManyField(User, blank=True, related_name="listing")
     seller_username = models.CharField(max_length=64, default="")
     img_url = models.CharField(max_length=64, blank=True)
-    category = models.CharField(max_length=64, choices=CATEGORIES, default="art")
+    category = models.CharField(max_length=64, choices=CATEGORIES, default="", blank=True)
     in_watchlist = models.BooleanField(default=False)
     #TODO: Check for only positives and change default from 0!
     current_price = models.DecimalField(max_digits=9, decimal_places=2, default=0)

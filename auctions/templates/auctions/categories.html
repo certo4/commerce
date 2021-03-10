@@ -5,6 +5,8 @@
     <h2>Categories</h2>
 
     {% for key, category_label in categories %}
-        <li><a href="{% url 'category' key %}">{{ category_label }}</a></li>
+        {% if key %}
+            <li><a href="{% url 'category' key %}">{{ category_label }}</a></li>
+        {% endif %}
     {% endfor %}
 {% endblock %}

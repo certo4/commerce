@@ -27,11 +27,14 @@
     {% endif %}
 
     <p>{{ listing.description }}</p>
+    {% if listing.img_url %}
+        <img href="{{ listing.img_url }}" alt="{{ listing.title }}">
+    {% endif %}
     <p>Price: ${{ listing.starting_bid }}</p>
-    <p>Image: {{ listing.img_url }}</p>
     <p>Seller: {{ listing.seller_username }}</p>
-    <p>Category: {{ listing.category_id }}</p>
-    <p>Watchlist: {{ listing.in_watchlist }}</p>
+    {% if listing.category_id %}
+        <p>Category: {{ listing.category_id }}</p>
+    {% endif %}
     <br>
 
     {{ message }}
