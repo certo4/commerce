@@ -79,12 +79,11 @@ def new_listing(request):
     })
 
 
-# Function that will parse the information from the 
+# Function that will parse the information from the
 # Create Listing form and save it to database as well
 # as redirect to the newly created listing.
 @login_required
 def create_listing(request):
-
     form = ListingForm(request.POST)
     # Check whether form is valid:
     if form.is_valid():
@@ -105,7 +104,7 @@ def create_listing(request):
         listing.current_winner.add(request.user)
         listing.save()
 
-        #Redirect to newly created listing
+        # Redirect to newly created listing
         return HttpResponseRedirect(f'/listings/{listing.id}')
 
     else:
@@ -114,7 +113,7 @@ def create_listing(request):
         return HttpResponseRedirect(reverse("new_listing"))
 
 
-# Helper function to check if the current user is the winner and 
+# Helper function to check if the current user is the winner and
 # return the current username otherwise return false
 def get_winner(request, listing):
     is_winner = listing.is_winner(request.user.username)
@@ -134,9 +133,8 @@ def get_close_listing_form(request, listing):
     return False
 
 
-# View that will render each listing with all of its forms
-# like make a bid, comment, watchlist and close the bid 
-# forms if the user viewing the listing is the owner.
+# Function that will call on the display listing
+# function when there isn't a message.
 def listing(request, id):
     # Getting the object
     listing = Listing.objects.get(id=id)
@@ -149,9 +147,8 @@ def listing(request, id):
             watchlist_text = "Remove from Watchlist"
             watchlist_form = WatchlistAction(initial={'set_watchlist': False})
 
-
         # If necessary, populate the current_winner and close listing form
-        current_winner = get_winner(request, listing)       
+        current_winner = get_winner(request, listing)
         close_listing_form = get_close_listing_form(request, listing)
 
         return render(request, "auctions/listing.html", {
@@ -205,11 +202,6 @@ def watchlist_action(request, id):
             listing.watchlist_username = request.user.username
             listing.save()
 
-            return render(request, "auctions/test.html", {
-                "listing": listing,
-                "add_watchlist": listing.in_watchlist,
-            })
-
     return HttpResponseRedirect(f'/listings/{id}')
 
 
@@ -220,6 +212,7 @@ def close_listing(request, id):
     if request.user.username == listing.seller_username:
         listing.is_active = False
         listing.save()
+
     return HttpResponseRedirect(f'/listings/{id}')
 
 
@@ -271,7 +264,6 @@ def bid(request, id):
                 # Save new price in listing object
                 listing.current_price = submitted_bid
                 listing.current_winner_username = request.user.username
-                listing.save()
                 listing.current_winner.add(request.user)
                 listing.save()
 
@@ -279,8 +271,9 @@ def bid(request, id):
             else:
                 message = "Your bid is lower than or equal to the current bid. Big higher!"
 
-            return render(request, "auctions/test.html", {
+            return render(request, "auctions/message.html", {
                 "message": message,
+                "is_error": True
             })
 
     return HttpResponseRedirect(f'/listings/{id}')

@@ -2,7 +2,9 @@
 
 {% block body %}
 
-    <h2>Error</h2><br>
+    {% if is_error %}
+        <h2>Error</h2><br>
+    {% endif %}
     {{ message }}<br>
     
 {% endblock %}
