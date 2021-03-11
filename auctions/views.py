@@ -267,13 +267,12 @@ def bid(request, id):
                 listing.current_winner.add(request.user)
                 listing.save()
 
-                message = "Your bid was accepted. You are on the lead!"
+                message = False
             else:
-                message = "Your bid is lower than or equal to the current bid. Big higher!"
+                message = True
 
             return render(request, "auctions/message.html", {
-                "message": message,
-                "is_error": True
+                "is_error": message,
             })
 
     return HttpResponseRedirect(f'/listings/{id}')

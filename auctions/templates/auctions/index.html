@@ -1,6 +1,9 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
+
+    {# Consolidating all pages that need to display a listing #}
+
     {% if is_category %}
         <h2>{{ is_category|title }}</h2>
     {% elif is_watchlist %}
@@ -13,10 +16,18 @@
         <div>
             <h2><a href="{% url 'listings' listing.id %}">{{ listing.title }}</a></h2>
             <p>{{ listing.description }}</p>
-            <p>Price: ${{ listing.starting_bid }}</p>
-            <p>Image: {{ listing.img_url }}</p>
+            {% if listing.img_url %}
+                <img href="{{ listing.img_url }}" alt="{{ listing.title }}">
+            {% endif %}
+            {% if listing.current_price != 0 %}
+                <p>Price: ${{ listing.current_price }}</p>
+            {% else %}
+                <p>Price: ${{ listing.starting_bid }}</p>
+            {% endif %}
             <p>Seller: {{ listing.seller_username }}</p>
-            <p>Category: {{ listing.category_id }}</p>
+            {% if listing.category_id %}
+                <p>Category: {{ listing.category_id }}</p>
+            {% endif %}
         </div>
         <br>
     {% endfor %}

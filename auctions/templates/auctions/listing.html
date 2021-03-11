@@ -2,8 +2,6 @@
 
 {% block body %}
 
-    {# TODO: Add message for error and successes #}
-
     <h2>{{ listing.title }}</h2>
 
     {% if current_winner and not is_owner %}
@@ -21,7 +19,7 @@
     {% endif %}
     
     <br>
-    <p>{{ listing.description }}</p>
+    <p>Description: {{ listing.description }}</p>
     {% if listing.img_url %}
         <img href="{{ listing.img_url }}" alt="{{ listing.title }}">
     {% endif %}
@@ -44,8 +42,6 @@
             <button type="submit" name="submit">Close Listing</button>
         </form>
     {% endif %}
-
-    {{ message }}
     
     <br>
 

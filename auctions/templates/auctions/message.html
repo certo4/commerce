@@ -4,7 +4,11 @@
 
     {% if is_error %}
         <h2>Error</h2><br>
+        <p>Your bid is lower than or equal to the current bid. Big higher!</p><br>
+    {% else %}
+        <h2>Success</h2><br>
+        <p>Your bid was accepted. You are on the lead!</p><br>
     {% endif %}
-    {{ message }}<br>
+
     
 {% endblock %}
