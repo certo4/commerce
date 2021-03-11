@@ -69,6 +69,7 @@ def register(request):
     else:
         return render(request, "auctions/register.html")
 
+
 @login_required
 def new_listing(request):
     form = ListingForm()
@@ -77,6 +78,10 @@ def new_listing(request):
         "message": ""
     })
 
+
+# Function that will parse the information from the 
+# Create Listing form and save it to database as well
+# as redirect to the newly created listing.
 @login_required
 def create_listing(request):
 
@@ -85,30 +90,53 @@ def create_listing(request):
     if form.is_valid():
 
         # Create new listing
-        l = Listing(
-            title = form.cleaned_data["title"],
-            # seller = current_user,
-            description = form.cleaned_data["description"],
-            starting_bid = form.cleaned_data["starting_bid"],
-            img_url = form.cleaned_data["img_url"],
-            seller_username = request.user.username,
-            category = form.cleaned_data["category"],
-            current_price = 0,
-            is_active = True,
-            # current_winner = current_user
+        listing = Listing(
+            title=form.cleaned_data["title"],
+            description=form.cleaned_data["description"],
+            starting_bid=form.cleaned_data["starting_bid"],
+            img_url=form.cleaned_data["img_url"],
+            seller_username=request.user.username,
+            category=form.cleaned_data["category"],
+            current_price=0,
+            is_active=True,
         )
-        l.save()
-        l.seller.add(request.user)
-        l.current_winner.add(request.user)
-        #l.category_id.set()
-        
+        listing.save()
+        listing.seller.add(request.user)
+        listing.current_winner.add(request.user)
+        listing.save()
 
-        return render(request, "auctions/test.html", {
-            "listing": l
-        })
+        #Redirect to newly created listing
+        return HttpResponseRedirect(f'/listings/{listing.id}')
+
     else:
+
+        # Redirect to create a new listing form
         return HttpResponseRedirect(reverse("new_listing"))
 
+
+# Helper function to check if the current user is the winner and 
+# return the current username otherwise return false
+def get_winner(request, listing):
+    is_winner = listing.is_winner(request.user.username)
+    new_bidders = listing.new_bidders()
+
+    if not listing.is_active and is_winner and new_bidders:
+        return listing.current_winner_username
+    return False
+
+
+# Helper function to check if the listing is active
+# and the owner viewing the form is the owner
+def get_close_listing_form(request, listing):
+    is_owner = listing.is_owner(request.user.username)
+    if listing.is_active and is_owner:
+        return CloseListing()
+    return False
+
+
+# View that will render each listing with all of its forms
+# like make a bid, comment, watchlist and close the bid 
+# forms if the user viewing the listing is the owner.
 def listing(request, id):
     # Getting the object
     listing = Listing.objects.get(id=id)
@@ -116,20 +144,15 @@ def listing(request, id):
 
         # Setting watchlist form button text
         watchlist_text = "Add to Watchlist"
-        watchlist_form = WatchlistAction(initial={'set_watchlist':True})
+        watchlist_form = WatchlistAction(initial={'set_watchlist': True})
         if listing.in_watchlist:
             watchlist_text = "Remove from Watchlist"
-            watchlist_form = WatchlistAction(initial={'set_watchlist':False})
+            watchlist_form = WatchlistAction(initial={'set_watchlist': False})
 
-        # Check if the current user is the winner
-        current_winner = False
-        if not listing.is_active and listing.current_winner_username == request.user.username:
-            current_winner = listing.current_winner_username
 
-        # Closing listing logic
-        close_listing_form = False
-        if listing.seller_username == request.user.username:
-            close_listing_form = CloseListing()
+        # If necessary, populate the current_winner and close listing form
+        current_winner = get_winner(request, listing)       
+        close_listing_form = get_close_listing_form(request, listing)
 
         return render(request, "auctions/listing.html", {
             "listing": listing,
@@ -140,7 +163,8 @@ def listing(request, id):
             "current_winner": current_winner,
             "bidding_form": BiddingForm(),
             "comment_form": CommentForm(),
-            "comments": Comment.objects.filter(listing_id=id)
+            "comments": Comment.objects.filter(listing_id=id),
+            "is_owner": listing.is_owner(request.user.username)
         })
     else:
         return render(request, "auctions/listing.html", {
@@ -151,17 +175,21 @@ def listing(request, id):
             "comments": Comment.objects.filter(listing_id=id)
         })
 
+
+# Function that renders all of the user's watchlisted items
 @login_required
 def watchlist(request):
     return render(request, "auctions/index.html", {
         "listings": Listing.objects.filter(
-            in_watchlist=True, 
-            seller_username=request.user.username
+            in_watchlist=True,
+            watchlist_username=request.user.username
         ),
         "is_watchlist": True,
         "is_category": False
     })
 
+
+# Function that will add an item to a user's watchlist
 @login_required
 def watchlist_action(request, id):
     # If this is a POST request we need to process the form data
@@ -174,6 +202,7 @@ def watchlist_action(request, id):
             # Get listing object and new in_watchlist value
             listing = Listing.objects.get(id=id)
             listing.in_watchlist = bool(form.cleaned_data["set_watchlist"])
+            listing.watchlist_username = request.user.username
             listing.save()
 
             return render(request, "auctions/test.html", {
@@ -181,12 +210,10 @@ def watchlist_action(request, id):
                 "add_watchlist": listing.in_watchlist,
             })
 
-    # If a GET (or any other method) we'll create a blank form
-    else:
-        form = WatchlistAction()
-    
     return HttpResponseRedirect(f'/listings/{id}')
 
+
+# Function that will close an existing listing
 @login_required
 def close_listing(request, id):
     listing = Listing.objects.get(id=id)
@@ -195,11 +222,16 @@ def close_listing(request, id):
         listing.save()
     return HttpResponseRedirect(f'/listings/{id}')
 
-def categories(request):   
+
+# Function that passes all categories to the main
+# category listing page
+def categories(request):
     return render(request, "auctions/categories.html", {
         "categories": CATEGORIES
     })
 
+
+# Function that will display all listings per category
 def category(request, id):
     return render(request, "auctions/index.html", {
         "listings": Listing.objects.filter(
@@ -209,6 +241,7 @@ def category(request, id):
         "is_watchlist": False,
         "is_category": id
     })
+
 
 @login_required
 def bid(request, id):
@@ -220,38 +253,45 @@ def bid(request, id):
         form = BiddingForm(request.POST)
         # Check whether it's valid:
         if form.is_valid():
-            # Get listing object and new in_watchlist value
+            # Checking that the bid is higher than current price
             listing = Listing.objects.get(id=id)
             submitted_bid = Decimal(form.cleaned_data["bid"])
-            acceptable_bid = is_acceptable_bid(submitted_bid, listing)   
+            acceptable_bid = is_acceptable_bid(submitted_bid, listing)
 
-            # Checking that the bid is higher than current price
+            # Create Bid if the bid is acceptable
             if acceptable_bid:
-                # Create bid
                 b = Bid(
-                    bid = submitted_bid,
-                    bidder_username = request.user.username
+                    bid=submitted_bid,
+                    bidder_username=request.user.username
                 )
+                b.save()
+                b.listing_id.add(Listing.objects.get(pk=int(id)))
                 b.save()
 
                 # Save new price in listing object
                 listing.current_price = submitted_bid
                 listing.current_winner_username = request.user.username
                 listing.save()
+                listing.current_winner.add(request.user)
+                listing.save()
 
                 message = "Your bid was accepted. You are on the lead!"
             else:
                 message = "Your bid is lower than or equal to the current bid. Big higher!"
-            # TODO: Make a function that will re-render the listing page with all its forms
+
             return render(request, "auctions/test.html", {
                 "message": message,
             })
-   
+
     return HttpResponseRedirect(f'/listings/{id}')
-    
+
+
+# Helper function to check whether a bid is acceptable
 def is_acceptable_bid(submitted_bid, listing):
     # Checking that submitted bid is equal to or greater than starting bid
-    # TODO: Replace 0 with a better way to check
+    # The default value of current price is zero and that is why
+    # I am checking for that - to make sure that I am looking at the
+    # first bid.
     if listing.current_price == 0:
         if submitted_bid >= listing.starting_bid:
             return True
@@ -260,6 +300,7 @@ def is_acceptable_bid(submitted_bid, listing):
         return True
     # Else the bid is not acceptable
     return False
+
 
 def comment(request, id):
     # If this is a POST request we need to process the form data
@@ -272,20 +313,17 @@ def comment(request, id):
 
             # Create comment
             c = Comment(
-                comment_text = form.cleaned_data["comment_text"],
-                # listing_id = Listing.objects.get(pk=int(id)),
-                commenter_username = request.user.username
+                comment_text=form.cleaned_data["comment_text"],
+                commenter_username=request.user.username
             )
             c.save()
             c.listing_id.add(Listing.objects.get(pk=int(id)))
             c.save()
 
-            return render(request, "auctions/test.html", {
-                "comment": "Success"
-            })
+            return HttpResponseRedirect(f'/listings/{id}')
 
     # If a GET (or any other method) we'll create a blank form
     else:
         form = CommentForm()
-    
+
     return HttpResponseRedirect(f'/listings/{id}')

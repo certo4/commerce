@@ -6,8 +6,10 @@
 
     <h2>{{ listing.title }}</h2>
 
-    {% if current_winner %}
-        <h3>Congratulations {{ current_winner }}! You won the auction</h3>
+    {% if current_winner and not is_owner %}
+        <br>
+        <h4>Congratulations {{ current_winner }}! You won the auction</h4>
+        <br>
     {% endif %}
     
     {% if watchlist_form %}
@@ -17,6 +19,23 @@
             <button type="submit" name="submit">{{ watchlist_text}}</button>
         </form>
     {% endif %}
+    
+    <br>
+    <p>{{ listing.description }}</p>
+    {% if listing.img_url %}
+        <img href="{{ listing.img_url }}" alt="{{ listing.title }}">
+    {% endif %}
+    {% if listing.current_price != 0 %}
+        <p>Price: ${{ listing.current_price }}</p>
+    {% else %}
+        <p>Price: ${{ listing.starting_bid }}</p>
+    {% endif %}
+    
+    <p>Seller: {{ listing.seller_username }}</p>
+    {% if listing.category_id %}
+        <p>Category: {{ listing.category_id }}</p>
+    {% endif %}
+    <br>
 
     {% if close_listing_form and listing.is_active == True %}
         <form action="{% url 'close_listing' listing.id %}" method="post">
@@ -25,17 +44,6 @@
             <button type="submit" name="submit">Close Listing</button>
         </form>
     {% endif %}
-
-    <p>{{ listing.description }}</p>
-    {% if listing.img_url %}
-        <img href="{{ listing.img_url }}" alt="{{ listing.title }}">
-    {% endif %}
-    <p>Price: ${{ listing.starting_bid }}</p>
-    <p>Seller: {{ listing.seller_username }}</p>
-    {% if listing.category_id %}
-        <p>Category: {{ listing.category_id }}</p>
-    {% endif %}
-    <br>
 
     {{ message }}
     
